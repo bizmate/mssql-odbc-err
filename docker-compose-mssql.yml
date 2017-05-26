@@ -1,0 +1,39 @@
+version: '2'
+
+services:
+  data:
+   image: busybox
+   user: $UID
+   volumes:
+     - ./:/var/www/html/:z
+
+  nginx:
+    image: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/php7/nginx.conf:/etc/nginx/nginx.conf:ro
+    volumes_from:
+      - data
+    depends_on:
+      - php7
+
+  php7:
+    build: docker/php7
+    user: $UID
+    ports:
+      - "9000"
+    volumes:
+      - ./docker/config/php7.ini:/usr/local/etc/php/php.ini
+      - ./docker/config/odbcinst.ini:/etc/odbcinst.ini
+      - ./docker/config/freetds.conf:/etc/freetds/freetds.conf
+
+    volumes_from:
+     - data
+    environment:
+      - DB_DATABASE
+      - DB_USERNAME
+      - DB_PASSWORD
+      - DB_HOSTNAME
+    security_opt:
+      - seccomp:unconfined
